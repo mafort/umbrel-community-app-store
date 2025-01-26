@@ -6,7 +6,7 @@ services:
     image: rednoah/filebot:node
     restart: unless-stopped
     volumes:
-      - data:/data
+      - /data/umbrel-os/home/umbrel/umbrel/app-data/mafort-filebot:/data
       - /media/usb:/usb
     ports:
       - 5452:5452
