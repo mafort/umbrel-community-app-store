@@ -1,10 +1,12 @@
 # docker-compose.yml
 version: '3.3'
 services:
-  filebot:
-    container_name: filebot
-    image: rednoah/filebot
+  filebot-node:
+    container_name: filebot-node
+    image: rednoah/filebot:node
+    restart: unless-stopped
     volumes:
       - data:/data
       - /media/usb:/usb
-    command: -script fn:sysinfo
+    ports:
+      - 5452:5452
