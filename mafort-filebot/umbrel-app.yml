@@ -1,19 +1,17 @@
 manifestVersion: 1
-id: sparkles-hello-world
-name: Hello World
-tagline: Replace this tagline with your app's tagline
-icon: https://svgur.com/i/mvA.svg
+id: mafort-filebot
+name: Filebot
+tagline: Media File Renamer
+icon: https://www.filebot.net/images/filebot.logo.svg
 category: Development
 version: "1.0.0"
 port: 4000
 description: >-
-  Add your app's description here.
+  Just a renamer app.
 
 
-  You can also add newlines!
-
-developer: Umbrel
-website: https://umbrel.com
+developer: Filebot
+website: https://www.filebot.net
 submitter: Umbrel
 submission: https://github.com/getumbrel/umbrel-hello-world-app
 repo: https://github.com/getumbrel/umbrel-hello-world-app
