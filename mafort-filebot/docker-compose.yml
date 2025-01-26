@@ -1,0 +1,10 @@
+# docker-compose.yml
+version: '3.3'
+services:
+  filebot:
+    container_name: filebot
+    image: rednoah/filebot
+    volumes:
+      - data:/data
+      - /media/usb:/usb
+    command: -script fn:sysinfo
