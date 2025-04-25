@@ -1,0 +1,153 @@
+version: "3.8"
+
+services:
+  plex:
+    image: linuxserver/plex:latest
+    container_name: plex
+    # network_mode: host # Mais fácil para descoberta, mas menos seguro. Veja alternativa abaixo.
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM} # Necessário apenas na primeira inicialização
+    volumes:
+      - ${HOST_BASE_PATH}/config/plex:/config
+      - ${HOST_BASE_PATH}/media/tvshows:/tv      # Onde o Plex procura séries
+      - ${HOST_BASE_PATH}/media/movies:/movies    # Onde o Plex procura filmes
+      - ${HOST_BASE_PATH}/media/music:/music      # Onde o Plex procura música
+      - ${HOST_BASE_PATH}/transcode:/transcode  # Opcional: diretório de transcodificação
+    ports: # Necessário se NÃO usar network_mode: host
+      - "32400:32400/tcp" # Acesso principal à interface web e APIs
+      - "3005:3005/tcp"   # Plex Companion
+      - "8324:8324/tcp"   # Plex Roku via Plex Companion
+      - "32469:32469/tcp" # Plex DLNA Server
+      - "1900:1900/udp"   # Plex DLNA Server
+      - "32410:32410/udp" # GDM network discovery
+      - "32412:32412/udp" # GDM network discovery
+      - "32413:32413/udp" # GDM network discovery
+      - "32414:32414/udp" # GDM network discovery
+    devices: # Necessário para transcodificação por hardware (se aplicável e configurado)
+      - /dev/dri:/dev/dri # Exemplo para Intel Quick Sync Video (QSV)
+    restart: unless-stopped
+    # networks: # Descomente se NÃO usar network_mode: host
+    #   - media-network # Descomente se NÃO usar network_mode: host
+
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+    volumes:
+      - ${HOST_BASE_PATH}/config/qbittorrent:/config
+      - ${HOST_BASE_PATH}/data/downloads:/downloads # Diretório onde os *arrs procurarão por downloads completos
+    ports:
+      - "8080:8080"   # Interface Web UI
+      - "6881:6881"   # Porta de escuta de torrents TCP
+      - "6881:6881/udp" # Porta de escuta de torrents UDP (DHT, PeX)
+    restart: unless-stopped
+    # networks: # Descomente se NÃO usar network_mode: host
+    #   - media-network # Descomente se NÃO usar network_mode: host
+
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${HOST_BASE_PATH}/config/prowlarr:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+    # networks: # Descomente se NÃO usar network_mode: host
+    #   - media-network # Descomente se NÃO usar network_mode: host
+
+  sonarr:
+    image: linuxserver/sonarr:latest # Ou :preview / :develop
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${HOST_BASE_PATH}/config/sonarr:/config
+      - ${HOST_BASE_PATH}/media/tvshows:/tv          # Onde o Sonarr organiza as séries (mesmo path /tv do Plex)
+      - ${HOST_BASE_PATH}/data/downloads:/downloads  # Onde o Sonarr busca downloads completos do qBittorrent
+    ports:
+      - "8989:8989"
+    depends_on:
+      - qbittorrent
+      - prowlarr
+    restart: unless-stopped
+    # networks: # Descomente se NÃO usar network_mode: host
+    #   - media-network # Descomente se NÃO usar network_mode: host
+
+  radarr:
+    image: linuxserver/radarr:latest # Ou :preview / :develop
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${HOST_BASE_PATH}/config/radarr:/config
+      - ${HOST_BASE_PATH}/media/movies:/movies      # Onde o Radarr organiza os filmes (mesmo path /movies do Plex)
+      - ${HOST_BASE_PATH}/data/downloads:/downloads  # Onde o Radarr busca downloads completos
+    ports:
+      - "7878:7878"
+    depends_on:
+      - qbittorrent
+      - prowlarr
+    restart: unless-stopped
+    # networks: # Descomente se NÃO usar network_mode: host
+    #   - media-network # Descomente se NÃO usar network_mode: host
+
+  lidarr:
+    image: linuxserver/lidarr:latest # Ou :develop
+    container_name: lidarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${HOST_BASE_PATH}/config/lidarr:/config
+      - ${HOST_BASE_PATH}/media/music:/music        # Onde o Lidarr organiza a música (mesmo path /music do Plex)
+      - ${HOST_BASE_PATH}/data/downloads:/downloads  # Onde o Lidarr busca downloads completos
+    ports:
+      - "8686:8686"
+    depends_on:
+      - qbittorrent
+      - prowlarr
+    restart: unless-stopped
+    # networks: # Descomente se NÃO usar network_mode: host
+    #   - media-network # Descomente se NÃO usar network_mode: host
+
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${HOST_BASE_PATH}/config/bazarr:/config
+      - ${HOST_BASE_PATH}/media/movies:/movies    # Acesso aos filmes para buscar/salvar legendas
+      - ${HOST_BASE_PATH}/media/tvshows:/tv      # Acesso às séries para buscar/salvar legendas
+    ports:
+      - "6767:6767"
+    depends_on:
+      - sonarr
+      - radarr
+    restart: unless-stopped
+    # networks: # Descomente se NÃO usar network_mode: host
+    #   - media-network # Descomente se NÃO usar network_mode: host
+
+# Descomente as linhas abaixo se você NÃO estiver usando network_mode: host para o Plex
+# networks:
+#   media-network:
+#     driver: bridge

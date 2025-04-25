@@ -1,0 +1,18 @@
+BASE_PATH=/home/user/docker/media-stack # Use o mesmo caminho do .env
+mkdir -p $BASE_PATH/config/plex
+mkdir -p $BASE_PATH/config/sonarr
+mkdir -p $BASE_PATH/config/radarr
+mkdir -p $BASE_PATH/config/lidarr
+mkdir -p $BASE_PATH/config/prowlarr
+mkdir -p $BASE_PATH/config/bazarr
+mkdir -p $BASE_PATH/config/qbittorrent
+mkdir -p $BASE_PATH/data/downloads/completed
+mkdir -p $BASE_PATH/data/downloads/incomplete # Opcional, para qBittorrent
+mkdir -p $BASE_PATH/media/tvshows
+mkdir -p $BASE_PATH/media/movies
+mkdir -p $BASE_PATH/media/music
+mkdir -p $BASE_PATH/transcode # Opcional, para transcodificação do Plex
+
+# Defina as permissões corretas (use seu usuário/grupo real se não for 1000:1000)
+sudo chown -R 1000:1000 $BASE_PATH
+sudo chmod -R 775 $BASE_PATH # Ou permissões mais restritivas se preferir
